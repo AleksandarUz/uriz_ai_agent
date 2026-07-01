@@ -1,0 +1,6 @@
+id,title,description,priority,status
+US-1,Login korisnika,Kao korisnik želim da se prijavim pomoću email-a i lozinke da bih pristupio svom nalogu,High,To Do
+US-2,Registracija korisnika,Kao novi korisnik želim da napravim nalog da bih mogao da koristim aplikaciju,High,To Do
+US-3,Plaćanje karticom,Kao kupac želim da platim karticom,High,In Progress
+US-4,Admin panel,Admin panel za upravljanje korisnicima,Medium,To Do
+US-5,Notifikacije,,Low,To Do

@@ -1,0 +1,6 @@
+id,title,description,priority,status
+US-1,Login korisnika,Kao registrovani korisnik želim da se prijavim pomoću email-a i lozinke da bih pristupio svom korisničkom nalogu,High,Done
+US-2,Registracija korisnika,Kao novi korisnik želim da napravim nalog da bih mogao da koristim sve funkcionalnosti aplikacije,High,Done
+US-3,Pretraga proizvoda,Kao kupac želim da pretražujem proizvode po nazivu da bih brže pronašao proizvod koji želim da kupim,Medium,Done
+US-4,Dodavanje u korpu,Kao kupac želim da dodam proizvod u korpu da bih mogao kasnije da nastavim proces kupovine,High,In Progress
+US-5,Pregled porudžbina,Kao korisnik želim da vidim svoje prethodne porudžbine da bih mogao da pratim istoriju kupovine,Medium,To Do

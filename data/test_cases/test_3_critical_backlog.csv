@@ -1,0 +1,6 @@
+id,title,description,priority,status
+US-1,Login sistem,Login,High,To Do
+US-2,Plaćanje,,High,To Do
+US-3,Admin panel,Admin panel,High,To Do
+US-4,Izveštaji,Napraviti izveštaje,Medium,To Do
+US-5,Notifikacije,,High,To Do
