@@ -488,3 +488,17 @@ Moguća unapređenja projekta:
 User Story Quality AI Agent predstavlja jednostavan AI alat za podršku Product Owner-u, Project Manager-u i QA timu.
 
 Agent ima jasno definisan ulaz, više koraka obrade, determinističku analizu, LLM komponentu i strukturisan izlaz. Njegova glavna vrednost je u tome što pomaže timu da ranije prepozna loše definisane zahteve, smanji rizik pogrešne implementacije i brže pripremi acceptance criteria i test scenarije.
+
+
+## JIRA i GitHub integracija
+
+Razvoj projekta je organizovan kroz JIRA projekat sa key-em `USQA`.
+
+Projekat je povezan sa GitHub repozitorijumom, a primer povezivanja prikazan je kroz branch i commit koji sadrže JIRA key.
+
+Primer:
+
+- Branch: `USQA-23-add-jira-github-commit-example`
+- Commit: `USQA-23 add Jira GitHub integration example`
+
+Na ovaj način JIRA može da prikaže GitHub aktivnost povezanu sa konkretnim taskom.
