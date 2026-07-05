@@ -4,7 +4,7 @@ User Story Quality AI Agent je jednostavan AI agent razvijen u Python programsko
 
 Agent analizira kvalitet user stories iz backlog-a, identifikuje probleme i rizike, daje preporuke za poboljšanje i generiše predlog acceptance criteria i test scenarija. Cilj agenta je da pomogne Product Owner-u, Project Manager-u i QA timu da pre početka implementacije prepoznaju nejasne ili nedovoljno definisane zahteve.
 
----
+
 
 ## Problem koji agent rešava
 
@@ -20,7 +20,7 @@ Product Owner ili Project Manager obično ručno proverava user stories, dopunja
 
 Ovaj agent automatizuje deo tog procesa tako što učitava user stories iz CSV fajla, analizira njihov kvalitet i generiše strukturisan izveštaj.
 
----
+
 
 ## Kome je agent namenjen
 
@@ -31,7 +31,7 @@ Agent je namenjen sledećim korisnicima:
 - QA inženjeru, za pripremu osnovnih test scenarija;
 - razvojnom timu, za bolje razumevanje zahteva pre implementacije.
 
----
+
 
 ## Funkcionalnosti
 
@@ -45,56 +45,40 @@ Agent omogućava:
 - generisanje preporuka za poboljšanje;
 - generisanje acceptance criteria pomoću LLM modela;
 - generisanje test scenarija pomoću LLM modela;
-- čuvanje finalnog izveštaja u Markdown fajl.
+- čuvanje finalnog izveštaja u PDF fajl.
 
----
+
 
 ## Ulazni podaci
 
-Ulazni podaci se nalaze u fajlu:
+Ulazni podaci se nalaze u fajlu: data/user_stories.csv
 
-```text
-data/user_stories.csv
-```
-
-CSV fajl mora imati sledeće kolone:
-
-```csv
-id,title,description,priority,status
-```
+CSV fajl mora imati sledeće kolone: id,title,description,priority,status
 
 Primer ulaza:
 
-```csv
 id,title,description,priority,status
 US-1,Login korisnika,Kao korisnik želim da se prijavim pomoću email-a i lozinke da bih pristupio svom nalogu,High,To Do
 US-2,Registracija korisnika,Kao novi korisnik želim da napravim nalog da bih mogao da koristim aplikaciju,High,To Do
 US-3,Plaćanje karticom,Kao kupac želim da platim karticom,High,In Progress
 US-4,Admin panel,Admin panel za upravljanje korisnicima,Medium,To Do
 US-5,Notifikacije,,Low,To Do
-```
 
----
 
-## Izlazni podaci
+## Izlaz sistema
 
-Agent generiše Markdown izveštaj i čuva ga u fajl:
+Agent generiše strukturisan PDF izveštaj koji sadrži:
 
-```text
-output/user_story_report.md
-```
+1. pregled kvaliteta backlog-a;
+2. identifikovane probleme i rizike;
+3. preporuke za poboljšanje;
+4. predlog acceptance criteria;
+5. predlog test scenarija.
 
-Izveštaj sadrži sledeće sekcije:
-
-1. Pregled kvaliteta backlog-a
-2. Identifikovani problemi i rizici
-3. Preporuke za poboljšanje
-4. Predlog acceptance criteria
-5. Predlog test scenarija
-
+Generisani izveštaji čuvaju se u `output/` folderu.
 Primer dela izlaza:
 
-```markdown
+
 ## 1. Pregled kvaliteta backlog-a
 
 - Ukupan broj analiziranih user stories: 5
@@ -102,9 +86,7 @@ Primer dela izlaza:
 - Broj user stories koje zahtevaju doradu: 2
 - Broj kritičnih user stories: 1
 - Prosečna ocena kvaliteta: 72.0/100
-```
 
----
 
 ## Workflow agenta
 
@@ -147,9 +129,8 @@ Ovim se smanjuje mogućnost da model pogreši u osnovnim podacima kao što su br
 
 ### 4. Čuvanje izveštaja
 
-Fajl `main.py` povezuje sve module, pokreće ceo workflow i čuva rezultat u `output/user_story_report.md`.
+Fajl `main.py` povezuje sve module, pokreće ceo workflow i čuva rezultat u `output/user_story_report.pdf`.
 
----
 
 ## Zašto agent nije običan chatbot
 
@@ -165,7 +146,6 @@ Razlika:
 | Nema fiksne korake obrade | Ima workflow: učitavanje, analiza, AI generisanje, čuvanje |
 | Može odgovoriti bez podataka | Radi na osnovu konkretnih user stories |
 
----
 
 ## Tehnologije
 
@@ -178,14 +158,12 @@ Projekat koristi:
 - pandas
 - python-dotenv
 
----
-
 ## Struktura projekta
 
-```text
 user-story-ai-agent/
 │
 ├── main.py
+├── pdf_generator.py
 ├── data_loader.py
 ├── story_analyzer.py
 ├── ai_agent.py
@@ -198,22 +176,23 @@ user-story-ai-agent/
 │   └── user_stories.csv
 │
 └── output/
-    └── user_story_report.md
-```
+    └── user_story_report.pdf
+
 
 Opis glavnih fajlova:
 
 - `main.py` — ulazna tačka aplikacije;
+- `pdf_generator.py` — generiše pdf izveštaj;
 - `data_loader.py` — modul za učitavanje CSV podataka;
 - `story_analyzer.py` — modul za analizu i scoring user stories;
 - `ai_agent.py` — modul za rad sa LangChain-om i LLM modelom;
 - `data/user_stories.csv` — ulazni podaci;
-- `output/user_story_report.md` — generisani izveštaj;
+- `output/user_story_report.pdf` — generisani izveštaj;
 - `.env` — lokalna konfiguracija modela i API ključeva;
 - `.env.example` — primer konfiguracionog fajla;
 - `requirements.txt` — lista potrebnih Python biblioteka.
 
----
+
 
 ## Instalacija
 
@@ -221,56 +200,40 @@ Opis glavnih fajlova:
 
 Preuzeti projekat i otvoriti root folder projekta u VS Code-u.
 
-Primer:
-
-```powershell
-cd C:\Users\aleks\OneDrive\Desktop\ai_agent
-```
+Primer: cd C:\Users\aleks\OneDrive\Desktop\ai_agent
 
 ### 2. Kreiranje virtualnog okruženja
 
-```powershell
 python -m venv venv
-```
 
-Ako komanda `python` ne radi, može se koristiti:
+Ako komanda `python` ne radi, može se koristiti: py -m venv venv
 
-```powershell
-py -m venv venv
-```
 
 ### 3. Aktivacija virtualnog okruženja
 
 U PowerShell terminalu:
 
-```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\venv\Scripts\Activate.ps1
-```
 
 Nakon aktivacije treba da se pojavi oznaka `(venv)` u terminalu.
 
 ### 4. Instalacija biblioteka
 
-```powershell
 pip install -r requirements.txt
-```
 
----
 
 ## requirements.txt
 
 Fajl `requirements.txt` treba da sadrži:
 
-```txt
 pandas>=2.0.0
 python-dotenv>=1.0.1
 langchain>=0.3.0
 langchain-openai>=0.2.0
 langchain-ollama>=0.2.0
-```
+reportlab
 
----
 
 ## Podešavanje Ollama modela
 
@@ -280,29 +243,22 @@ Potrebno je instalirati Ollama i skinuti model.
 
 Primer za Qwen model:
 
-```powershell
-ollama pull qwen2.5:7b
-```
+    ollama pull qwen2.5:7b
 
 Ukoliko računar ne može da pokrene veći model, može se koristiti manji:
 
-```powershell
-ollama pull qwen2.5:3b
-```
+    ollama pull qwen2.5:3b
 
 Može se koristiti i Llama model:
 
-```powershell
-ollama pull llama3.2
-```
+    ollama pull llama3.2
+
 
 Provera instaliranih modela:
 
-```powershell
 ollama list
-```
 
----
+
 
 ## Podešavanje .env fajla
 
@@ -310,17 +266,15 @@ U root folderu projekta potrebno je napraviti `.env` fajl.
 
 Primer za Ollama:
 
-```env
 LLM_PROVIDER=ollama
 OLLAMA_MODEL=qwen2.5:7b
-```
+
 
 Ako se koristi manji model:
 
-```env
 LLM_PROVIDER=ollama
 OLLAMA_MODEL=qwen2.5:3b
-```
+
 
 OpenAI API ključ nije potreban ako se koristi Ollama lokalni model.
 
@@ -332,7 +286,6 @@ OPENAI_API_KEY=your_openai_api_key_here
 OPENAI_MODEL=gpt-4o-mini
 ```
 
----
 
 ## .env.example
 
@@ -346,7 +299,6 @@ OLLAMA_MODEL=qwen2.5:7b
 # OPENAI_MODEL=gpt-4o-mini
 ```
 
----
 
 ## .gitignore
 
@@ -362,7 +314,7 @@ output/
 
 `.env` fajl se ne postavlja na GitHub jer može sadržati API ključeve i osetljive podatke.
 
----
+
 
 ## Pokretanje aplikacije
 
@@ -380,7 +332,7 @@ Nakon pokretanja, agent će:
 4. generisati AI izveštaj;
 5. sačuvati izveštaj u `output/user_story_report.md`.
 
----
+
 
 ## Primer pokretanja
 
@@ -402,10 +354,10 @@ Prosecna ocena kvaliteta: 72.0/100
 
 Generisanje AI izvestaja...
 
-Izvestaj je sacuvan u fajl: output/user_story_report.md
+Izvestaj je sacuvan u fajl: output/user_story_report.pdf
 ```
 
----
+
 
 ## Error handling
 
@@ -420,7 +372,7 @@ Aplikacija obrađuje sledeće greške:
 
 Ukoliko LLM ne uspe da generiše jedan deo izveštaja, aplikacija ne prekida ceo program, već prikazuje poruku o grešci za taj deo.
 
----
+
 
 ## Testiranje
 
@@ -456,7 +408,6 @@ Očekivani rezultat:
 - agent upozorava da visokoprioritetni nejasni zahtevi predstavljaju rizik;
 - agent predlaže dopunu user stories pre implementacije.
 
----
 
 ## Ograničenja
 
@@ -476,12 +427,10 @@ Moguća unapređenja projekta:
 - upload CSV fajla kroz web interfejs;
 - čuvanje istorije analiza;
 - automatsko dodavanje komentara u JIRA taskove;
-- export izveštaja u PDF format;
 - preciznije ocenjivanje user stories na osnovu INVEST kriterijuma;
 - podrška za više jezika;
 - bolji post-processing AI generisanog teksta.
 
----
 
 ## Zaključak
 
