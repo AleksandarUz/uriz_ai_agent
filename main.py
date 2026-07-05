@@ -2,6 +2,7 @@ import os
 import sys
 
 from data_loader import load_user_stories
+from jira_loader import load_user_stories_from_jira
 from story_analyzer import (
     analyze_all_stories,
     generate_analysis_summary,
@@ -11,23 +12,53 @@ from pdf_generator import generate_pdf
 
 
 def main():
-    if len(sys.argv) > 1:
-        file_path = sys.argv[1]
+    # Provera izvora podataka
+    use_jira = "--jira" in sys.argv[1:]
+
+    # Određivanje CSV fajla ako se ne koristi JIRA
+    if use_jira:
+        file_path = None
     else:
-        file_path = "data/user_stories.csv"
+        if len(sys.argv) > 1:
+            file_path = sys.argv[1]
+        else:
+            file_path = "data/user_stories.csv"
 
     try:
+        # ==================================================
+        # 1. UČITAVANJE PODATAKA
+        # ==================================================
+
+        if use_jira:
+            print(
+                "Ucitavanje user stories direktno sa "
+                "JIRA platforme...\n"
+            )
+
+            stories = load_user_stories_from_jira()
+
+        else:
+            print(
+                f"Ucitavanje user stories iz fajla: "
+                f"{file_path}\n"
+            )
+
+            stories = load_user_stories(file_path)
+
         print(
-            f"Ucitavanje user stories iz fajla: "
-            f"{file_path}\n"
+            f"Ucitano je {len(stories)} user stories.\n"
         )
 
-        stories = load_user_stories(file_path)
+        if len(stories) == 0:
+            print(
+                "Nije pronadjena nijedna user story "
+                "za analizu."
+            )
+            return
 
-        print(
-            f"Ucitano je {len(stories)} "
-            f"user stories.\n"
-        )
+        # ==================================================
+        # 2. ANALIZA USER STORIES
+        # ==================================================
 
         print("Analiza user stories...\n")
 
@@ -38,6 +69,10 @@ def main():
         summary = generate_analysis_summary(
             analysis_results
         )
+
+        # ==================================================
+        # 3. ISPIS REZIMEA
+        # ==================================================
 
         print("=== REZIME ANALIZE ===")
 
@@ -68,6 +103,10 @@ def main():
 
         print()
 
+        # ==================================================
+        # 4. AI GENERISANJE
+        # ==================================================
+
         print("Generisanje AI izvestaja...\n")
 
         report = generate_user_story_report(
@@ -77,23 +116,32 @@ def main():
 
         print(report)
 
+        # ==================================================
+        # 5. ODREĐIVANJE OUTPUT FAJLA
+        # ==================================================
+
         os.makedirs(
             "output",
             exist_ok=True,
         )
 
-        input_file_name = os.path.splitext(
-            os.path.basename(file_path)
-        )[0]
+        if use_jira:
+            input_file_name = "jira_backlog"
+        else:
+            input_file_name = os.path.splitext(
+                os.path.basename(file_path)
+            )[0]
 
         output_path = (
             f"output/"
             f"{input_file_name}_report.pdf"
         )
 
-        print(
-            "\nGenerisanje PDF dokumenta..."
-        )
+        # ==================================================
+        # 6. GENERISANJE PDF-A
+        # ==================================================
+
+        print("\nGenerisanje PDF dokumenta...")
 
         generate_pdf(
             report,
@@ -117,7 +165,7 @@ def main():
 
     except RuntimeError as error:
         print(
-            f"Greska pri radu AI agenta: {error}"
+            f"Greska pri radu aplikacije: {error}"
         )
 
     except Exception as error:
