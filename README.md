@@ -18,7 +18,7 @@ U softverskim projektima često se dešava da user stories nisu dovoljno jasno n
 
 Product Owner ili Project Manager obično ručno proverava user stories, dopunjava opise i priprema kriterijume prihvatanja. QA inženjer zatim na osnovu tih zahteva priprema test scenarije.
 
-Ovaj agent automatizuje deo tog procesa tako što učitava user stories iz CSV fajla, analizira njihov kvalitet i generiše strukturisan izveštaj.
+Ovaj agent automatizuje deo tog procesa tako što učitava user stories iz CSV fajla ili direktno sa JIRA Cloud platforme, analizira njihov kvalitet i generiše strukturisan PDF izveštaj.
 
 
 
@@ -38,6 +38,9 @@ Agent je namenjen sledećim korisnicima:
 Agent omogućava:
 
 - učitavanje user stories iz CSV fajla;
+- direktno učitavanje Story issue-a sa JIRA Cloud platforme;
+- korišćenje JQL upita za filtriranje JIRA podataka;
+- konverziju JIRA ADF description formata u običan tekst;
 - proveru da li user story ima naslov, opis, prioritet i status;
 - proveru da li opis prati standardni user story format;
 - ocenjivanje kvaliteta svakog zahteva;
@@ -49,21 +52,55 @@ Agent omogućava:
 
 
 
-## Ulazni podaci
+## Izvori podataka
 
-Ulazni podaci se nalaze u fajlu: data/user_stories.csv
+Agent podržava dva izvora podataka:
 
-CSV fajl mora imati sledeće kolone: id,title,description,priority,status
+1. CSV fajl;
+2. direktno učitavanje Story issue-a sa JIRA Cloud platforme.
 
-Primer ulaza:
+### CSV izvor
 
+Podrazumevani ulazni podaci nalaze se u fajlu:
+
+`data/user_stories.csv`
+
+CSV fajl mora imati sledeće kolone:
+
+```text
+id,title,description,priority,status
+```
+
+```primer
 id,title,description,priority,status
 US-1,Login korisnika,Kao korisnik želim da se prijavim pomoću email-a i lozinke da bih pristupio svom nalogu,High,To Do
 US-2,Registracija korisnika,Kao novi korisnik želim da napravim nalog da bih mogao da koristim aplikaciju,High,To Do
 US-3,Plaćanje karticom,Kao kupac želim da platim karticom,High,In Progress
 US-4,Admin panel,Admin panel za upravljanje korisnicima,Medium,To Do
 US-5,Notifikacije,,Low,To Do
+```
 
+CSV Režim se pokreće komandom: python main.py
+ili konkretnim CSV fajlom: python main.py data/test_cases/test_1_mixed_backlog.csv
+
+## Jira Cloud izvor
+
+Agent može direktno da učita Story issue-e sa JIRA Cloud platforme preko REST API-ja.
+
+JIRA režim pokreće se komandom: python main.py --jira
+
+U JIRA režimu agent:
+
+- autentifikuje se pomoću JIRA email adrese i API tokena;
+- koristi JQL upit za preuzimanje Story issue-a;
+- preuzima summary, description, priority i status vrednosti;
+- konvertuje JIRA ADF description strukturu u običan tekst;
+- mapira JIRA podatke na internu strukturu koju koristi analyzer;
+- analizira kvalitet user stories;
+- koristi LLM za generisanje acceptance criteria i test scenarija;
+- generiše strukturisan PDF izveštaj.
+
+JIRA i CSV izvori vraćaju podatke u istom internom formatu, tako da ostatak workflow-a koristi iste module za analizu, AI generisanje i PDF izlaz.
 
 ## Izlaz sistema
 
@@ -90,13 +127,17 @@ Primer dela izlaza:
 
 ## Workflow agenta
 
-Agent radi kroz četiri glavna koraka:
+Agent radi kroz šest glavnih koraka:
 
 ### 1. Učitavanje podataka
 
+Agent podržava dva izvora podataka.
+
 Modul `data_loader.py` učitava user stories iz CSV fajla i proverava da li postoje sve potrebne kolone.
 
-Ako CSV fajl ne postoji ili nema potrebne kolone, aplikacija prikazuje poruku o grešci.
+Modul `jira_loader.py` povezuje se sa JIRA Cloud REST API-jem, koristi JQL za preuzimanje Story issue-a i mapira dobijene podatke na internu strukturu aplikacije.
+
+Ako CSV fajl ne postoji, nema potrebne kolone ili JIRA API zahtev nije uspešan, aplikacija prikazuje odgovarajuću poruku o grešci.
 
 ### 2. Analiza user stories
 
@@ -127,9 +168,37 @@ Agent koristi hibridni pristup:
 
 Ovim se smanjuje mogućnost da model pogreši u osnovnim podacima kao što su broj analiziranih zahteva ili kategorije kvaliteta.
 
-### 4. Čuvanje izveštaja
+### 4. Generisanje strukturisanog izveštaja
 
-Fajl `main.py` povezuje sve module, pokreće ceo workflow i čuva rezultat u `output/user_story_report.pdf`.
+Nakon analize i LLM generisanja, sistem formira kompletan tekstualni izveštaj sa pet sekcija:
+
+1. pregled kvaliteta backlog-a;
+2. identifikovani problemi i rizici;
+3. preporuke za poboljšanje;
+4. predlog acceptance criteria;
+5. predlog test scenarija.
+
+### 5. Generisanje PDF dokumenta
+
+Modul `pdf_generator.py` koristi ReportLab biblioteku za generisanje PDF dokumenta.
+
+PDF generator podržava:
+
+- naslove i podnaslove;
+- bullet liste;
+- srpska latinična slova;
+- numeraciju stranica;
+- automatsko kreiranje output foldera.
+
+### 6. Čuvanje rezultata
+
+Fajl `main.py` povezuje sve module i upravlja kompletnim workflow-om.
+
+Za CSV ulaz generiše se PDF sa nazivom koji odgovara nazivu ulaznog fajla.
+
+Za JIRA režim generiše se:
+
+`output/jira_backlog_report.pdf`
 
 
 ## Zašto agent nije običan chatbot
@@ -141,8 +210,8 @@ Razlika:
 | Chatbot | User Story Quality AI Agent |
 |---|---|
 | Odgovara na slobodna pitanja | Izvršava konkretan proces analize |
-| Nema obavezan format ulaza | Koristi strukturisan CSV fajl |
-| Odgovor može biti bilo kog oblika | Izlaz je strukturisan Markdown izveštaj |
+| Nema obavezan format ulaza | Koristi CSV ili podatke direktno sa JIRA Cloud platforme |
+| Odgovor može biti bilo kog oblika | Izlaz je strukturisan PDF izveštaj |
 | Nema fiksne korake obrade | Ima workflow: učitavanje, analiza, AI generisanje, čuvanje |
 | Može odgovoriti bez podataka | Radi na osnovu konkretnih user stories |
 
@@ -157,27 +226,42 @@ Projekat koristi:
 - Qwen2.5 ili Llama 3.2 lokalni LLM model
 - pandas
 - python-dotenv
+- requests
+- ReportLab
+- JIRA Cloud REST API
+- JQL
+- GitHub
 
 ## Struktura projekta
 
 user-story-ai-agent/
 │
 ├── main.py
-├── pdf_generator.py
 ├── data_loader.py
+├── jira_loader.py
 ├── story_analyzer.py
 ├── ai_agent.py
+├── pdf_generator.py
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
 ├── README.md
+├── TEST_REPORT.md
+├── SRS_doc.docx
 │
 ├── data/
-│   └── user_stories.csv
+│   ├── user_stories.csv
+│   └── test_cases/
+│       ├── test_1_mixed_backlog.csv
+│       ├── test_2_good_backlog.csv
+│       └── test_3_critical_backlog.csv
 │
 └── output/
-    └── user_story_report.pdf
-
+    ├── user_stories_report.pdf
+    ├── test_1_mixed_backlog_report.pdf
+    ├── test_2_good_backlog_report.pdf
+    ├── test_3_critical_backlog_report.pdf
+    └── jira_backlog_report.pdf
 
 Opis glavnih fajlova:
 
@@ -191,7 +275,7 @@ Opis glavnih fajlova:
 - `.env` — lokalna konfiguracija modela i API ključeva;
 - `.env.example` — primer konfiguracionog fajla;
 - `requirements.txt` — lista potrebnih Python biblioteka.
-
+- `jira_loader.py` — modul za povezivanje sa JIRA Cloud REST API-jem, JQL pretragu, ADF preprocessing i mapiranje JIRA issue-a;
 
 
 ## Instalacija
@@ -233,7 +317,7 @@ langchain>=0.3.0
 langchain-openai>=0.2.0
 langchain-ollama>=0.2.0
 reportlab
-
+requests>=2.31.0
 
 ## Podešavanje Ollama modela
 
@@ -286,6 +370,14 @@ OPENAI_API_KEY=your_openai_api_key_here
 OPENAI_MODEL=gpt-4o-mini
 ```
 
+Za direktnu JIRA integraciju potrebno je dodati:
+
+```env
+JIRA_URL=https://your-domain.atlassian.net
+JIRA_EMAIL=your-email@example.com
+JIRA_API_TOKEN=your_jira_api_token
+JIRA_PROJECT_KEY=USQA
+```
 
 ## .env.example
 
@@ -297,8 +389,12 @@ OLLAMA_MODEL=qwen2.5:7b
 
 # OPENAI_API_KEY=your_openai_api_key_here
 # OPENAI_MODEL=gpt-4o-mini
-```
 
+JIRA_URL=
+JIRA_EMAIL=
+JIRA_API_TOKEN=
+JIRA_PROJECT_KEY=USQA
+```
 
 ## .gitignore
 
@@ -318,21 +414,29 @@ output/
 
 ## Pokretanje aplikacije
 
-Kada je virtualno okruženje aktivirano i biblioteke instalirane, aplikacija se pokreće komandom:
+Agent podržava CSV i JIRA režim rada.
+
+### Pokretanje sa podrazumevanim CSV fajlom
 
 ```powershell
 python main.py
 ```
 
-Nakon pokretanja, agent će:
+### Pokretanje sa konkretnim CSV fajlom
 
-1. učitati user stories iz `data/user_stories.csv`;
-2. analizirati njihov kvalitet;
-3. prikazati rezime analize u terminalu;
-4. generisati AI izveštaj;
-5. sačuvati izveštaj u `output/user_story_report.md`.
+```powershell
+python main.py data/test_cases/test_1_mixed_backlog.csv
+```
 
+### Pokretanje sa direktnim Jira izvorom
 
+```powershell
+python main.py --jira
+```
+
+U JIRA režimu agent direktno učitava Story issue-e iz JIRA projekta definisanog kroz JIRA_PROJECT_KEY vrednost u .env fajlu.
+
+Nakon obrade generiše se: output/jira_backlog_report.pdf
 
 ## Primer pokretanja
 
@@ -369,6 +473,13 @@ Aplikacija obrađuje sledeće greške:
 - nedostajući OpenAI API ključ ako se koristi OpenAI;
 - greške prilikom generisanja acceptance criteria;
 - greške prilikom generisanja test scenarija.
+- nedostajuće JIRA konfiguracione vrednosti;
+- neuspešna JIRA autentifikacija;
+- nedovoljne dozvole za pristup JIRA projektu;
+- timeout JIRA API zahteva;
+- greške prilikom povezivanja sa JIRA Cloud platformom;
+- neočekivani JIRA API status kodovi.
+
 
 Ukoliko LLM ne uspe da generiše jedan deo izveštaja, aplikacija ne prekida ceo program, već prikazuje poruku o grešci za taj deo.
 
@@ -409,9 +520,33 @@ Očekivani rezultat:
 - agent predlaže dopunu user stories pre implementacije.
 
 
+### Test 4 — Direktna JIRA integracija
+
+Agent je testiran direktnim učitavanjem pet Story issue-a sa JIRA Cloud platforme.
+
+Komanda:
+
+```powershell
+python main.py --jira
+```
+
+Rezultat:
+
+- učitano je 5 user stories direktno sa JIRA platforme;
+- 2 zahteva su ocenjena kao Good;
+- 2 zahteva zahtevaju doradu;
+- 1 zahtev je ocenjen kao Critical;
+- prosečna ocena kvaliteta iznosi 72.0/100;
+- generisan je output/jira_backlog_report.pdf.
+
+Ovaj test potvrđuje kompletan workflow:
+
+JIRA Cloud → REST API → JQL → ADF preprocessing → analiza → LLM → PDF.
+
 ## Ograničenja
 
-- Agent trenutno ne povlači podatke direktno iz JIRA API-ja, već koristi CSV fajl kao simulaciju JIRA export-a.
+- Agent trenutno samo čita Story issue-e sa JIRA platforme i ne menja ih automatski.
+- JIRA integracija zahteva ispravnu lokalnu konfiguraciju i API token.
 - Kvalitet AI generisanog teksta zavisi od izabranog LLM modela.
 - Lokalni modeli ponekad mogu generisati gramatički slabiji tekst.
 - Agent ne menja user stories automatski, već daje preporuke za njihovo poboljšanje.
@@ -423,14 +558,16 @@ Očekivani rezultat:
 
 Moguća unapređenja projekta:
 
-- direktna integracija sa JIRA API-jem;
 - upload CSV fajla kroz web interfejs;
 - čuvanje istorije analiza;
 - automatsko dodavanje komentara u JIRA taskove;
 - preciznije ocenjivanje user stories na osnovu INVEST kriterijuma;
 - podrška za više jezika;
 - bolji post-processing AI generisanog teksta.
-
+- automatsko ažuriranje JIRA Story issue-a na osnovu preporuka agenta;
+- automatsko dodavanje acceptance criteria u JIRA;
+- automatsko dodavanje komentara sa rezultatima analize;
+- periodično analiziranje JIRA backlog-a;
 
 ## Zaključak
 
