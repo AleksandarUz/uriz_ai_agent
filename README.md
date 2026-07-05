@@ -502,3 +502,10 @@ Primer:
 - Commit: `USQA-23 add Jira GitHub integration example`
 
 Na ovaj način JIRA može da prikaže GitHub aktivnost povezanu sa konkretnim taskom.
+
+
+## Dodatni AI alat
+
+Tokom razvoja projekta korišćen je ChatGPT kao dodatni AI alat za pomoć pri analizi arhitekture rešenja, unapređenju promptova, rešavanju tehničkih problema i pripremi projektne dokumentacije.
+
+ChatGPT nije deo runtime workflow-a aplikacije. Sam agent koristi LangChain i lokalni LLM model preko Ollama platforme.
